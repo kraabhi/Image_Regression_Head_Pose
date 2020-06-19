@@ -1,0 +1,40 @@
+path = untar_data(URLs.BIWI_HEAD_POSE)
+cal = np.genfromtxt(path/'15'/'rgb.cal', skip_footer=6) # camera calibration for each image will be used to get coordinates
+
+# to see the pose data for particular image which is in pose.txt
+
+def img_2_text(x):
+  return("{}pose.txt".format(str(x)[:-7]))
+  
+ctr = np.genfromtxt(img_2_text(fname[0]), skip_header=3) # get pose estimates from txt file
+
+# convert pose and calibration to image center
+
+def calibrate(coords):
+  c1 = coords[0] * cal[0][0]/coords[2] + cal[0][2]
+  c2 = coords[1] * cal[1][1]/coords[2] + cal[1][2]
+  return tensor([c2,c1])
+
+# convert image path to text file pse.txt and get pose coordinate and using camera calibration convet it to center points
+def get_ctr(f):
+    ctr = np.genfromtxt(img_2_text(f), skip_header=3)
+    return calibrate(ctr)
+    
+# show the center points on image
+
+def get_ip(img,pts):
+  return ImagePoints(FlowField(img.size, pts), scale=True)
+  
+img.show(y=get_ip(img, ctr), figsize=(6, 6))
+# dataset
+
+src = PointsItemList.from_folder(path).split_by_valid_func(lambda x: x.parent.name =='13').label_from_func(get_ctr)
+
+data = src.transform(get_transforms(), tfm_y=True, size=(120,160)).databunch().normalize(imagenet_stats)
+
+data.show_batch(3, figsize=(9,6))
+learn = cnn_learner(data, models.resnet50)
+learn.lr_find()
+learn.recorder.plot()
+learn.fit_one_cycle(5, slice(1e-2))
+learn.save('resnet50_BIWI_v1')
