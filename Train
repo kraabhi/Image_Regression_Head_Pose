@@ -38,3 +38,17 @@ learn.lr_find()
 learn.recorder.plot()
 learn.fit_one_cycle(5, slice(1e-2))
 learn.save('resnet50_BIWI_v1')
+
+tfms = get_transforms(max_rotate=20, max_zoom=1.5, max_lighting=0.5, max_warp=0.4, p_affine=1., p_lighting=1.)
+
+# using data augmentationdef _plot(i,j,ax):
+    x,y = data.train_ds[0]
+    x.show(ax, y=y)
+
+plot_multi(_plot, 3, 3, figsize=(8,6))
+data = (PointsItemList.from_folder(path)
+        .split_by_valid_func(lambda o: o.parent.name=='13')
+        .label_from_func(get_ctr)
+        .transform(tfms, tfm_y=True, size=(120,160))
+        .databunch().normalize(imagenet_stats)
+       )
