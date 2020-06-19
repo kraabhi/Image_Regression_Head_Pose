@@ -28,7 +28,7 @@ def get_ip(img,pts):
 img.show(y=get_ip(img, ctr), figsize=(6, 6))
 # dataset
 
-src = PointsItemList.from_folder(path).split_by_valid_func(lambda x: x.parent.name =='13').label_from_func(get_ctr)
+src = PointsItemList.from_folder(path).split_by_valid_func(lambda x: x.parent.name =='13').label_from_func(get_ctr) # alsowrite Imagefilelist.from_folder
 
 data = src.transform(get_transforms(), tfm_y=True, size=(120,160)).databunch().normalize(imagenet_stats)
 
